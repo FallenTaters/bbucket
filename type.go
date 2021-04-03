@@ -2,7 +2,7 @@ package bbucket
 
 import "go.etcd.io/bbolt"
 
-type keyer interface {
+type Keyer interface {
 	Key() []byte
 }
 
@@ -18,4 +18,4 @@ type GetterFunc func(ptr interface{})
 // MutateFunc receives a pointer to an object to be modified.
 // It should return the modified object, not a pointer.
 // Get your object of type T using: `*ptr.(*T)`
-type MutateFunc func(ptr interface{}) keyer
+type MutateFunc func(ptr interface{}) Keyer

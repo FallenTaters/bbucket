@@ -8,7 +8,7 @@ import (
 
 // Create stores a new object in the bucket.
 // If the key already exists, it returns ErrObjectAlreadyExists
-func (br Bucket) Create(obj keyer) error {
+func (br Bucket) Create(obj Keyer) error {
 	return br.BucketUpdate(func(b *bbolt.Bucket) error {
 		data := b.Get(obj.Key())
 		if data != nil {
