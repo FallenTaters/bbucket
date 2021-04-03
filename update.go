@@ -25,7 +25,7 @@ func (br Bucket) Update(key []byte, dst interface{}, mutate MutateFunc) error {
 		}
 
 		newObj := mutate(dst)
-		newKey := newObj.(keyer).Key()
+		newKey := newObj.Key()
 
 		if !bytes.Equal(newKey, key) {
 			err = b.Delete(key)
