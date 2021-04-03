@@ -1,4 +1,4 @@
-package boltrepo
+package bbucket
 
 import (
 	"encoding/json"
@@ -40,7 +40,7 @@ var testData = []testStruct{
 	testStruct1, testStruct2, testStruct3,
 }
 
-func getTestRepo() BoltRepo {
+func getTestRepo() Bucket {
 	db, err := bbolt.Open(testPath, 0666, &bbolt.Options{Timeout: 1 * time.Second})
 	if err != nil {
 		panic(err)
@@ -52,7 +52,7 @@ func getTestRepo() BoltRepo {
 		return nil
 	})
 
-	br := BoltRepo{
+	br := Bucket{
 		DB:     db,
 		Bucket: []byte("test"),
 	}

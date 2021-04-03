@@ -1,4 +1,4 @@
-module github.com/PotatoesFall/boltrepo
+module github.com/PotatoesFall/bbucket
 
 go 1.15
 

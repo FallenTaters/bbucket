@@ -1,4 +1,4 @@
-package boltrepo
+package bbucket
 
 import (
 	"encoding/json"
@@ -6,7 +6,9 @@ import (
 	"go.etcd.io/bbolt"
 )
 
-func (br BoltRepo) Get(key []byte, dst interface{}) error {
+// Get scans a single object by key
+// If the key is unknown, it returns ErrObjectNotFound
+func (br Bucket) Get(key []byte, dst interface{}) error {
 	return br.BucketView(func(b *bbolt.Bucket) error {
 		data := b.Get(key)
 		if data == nil {
@@ -17,7 +19,11 @@ func (br BoltRepo) Get(key []byte, dst interface{}) error {
 	})
 }
 
-func (br BoltRepo) GetAll(dst interface{}, f GetterFunc) error {
+// GetAll iterates over all objects in the bucket.
+// GetterFunc receives a pointer to an object.
+// Add the object to a slice defined in outside scope.
+// Get your object of type T using: `*ptr.(*T)`
+func (br Bucket) GetAll(dst interface{}, f GetterFunc) error {
 	if f == nil {
 		return ErrNilFuncPassed
 	}

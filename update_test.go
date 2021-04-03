@@ -1,4 +1,4 @@
-package boltrepo
+package bbucket
 
 import (
 	"testing"

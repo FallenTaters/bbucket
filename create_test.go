@@ -1,4 +1,4 @@
-package boltrepo
+package bbucket
 
 import (
 	"encoding/json"
@@ -8,7 +8,7 @@ import (
 	"go.etcd.io/bbolt"
 )
 
-func getTestStruct(br BoltRepo, key []byte) (testStruct, error) {
+func getTestStruct(br Bucket, key []byte) (testStruct, error) {
 	var t testStruct
 
 	return t, br.BucketView(func(b *bbolt.Bucket) error {

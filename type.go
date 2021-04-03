@@ -1,4 +1,4 @@
-package boltrepo
+package bbucket
 
 import "go.etcd.io/bbolt"
 
@@ -7,7 +7,7 @@ type keyer interface {
 }
 
 // BucketFunc receives a bucket to operate on.
-// It is intended for custom implementations not covered by boltrepo.
+// It is intended for custom implementations not covered by bbucket.
 type BucketFunc func(*bbolt.Bucket) error
 
 // GetterFunc receives a pointer to an object.
