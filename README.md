@@ -28,9 +28,43 @@ if err != nil {
 myBucket := bbucket.New(db, myBucketName)
 ```
 
-# Examples
+# Create
 
-## simple getter by key
+plain bbolt
+
+```go
+func create(obj Object) error {
+    return db.Update(func(tx *bbolt.Tx) error {
+        b := tx.Bucket(myBucketName)
+        if b == nil {
+            return errors.New("bucket not found")
+        }
+
+        if b.Get(obj.Key()) != nil {
+            return errors.New("object already exists")
+        }
+
+        data, err := json.Marshal(obj)
+        if err != nil {
+            return err
+        }
+
+        return b.Put(obj.Key(), data)
+    })
+}
+```
+
+with bbucket
+
+```go
+func create(obj Object) error {
+    return myBucket.Create(obj)
+}
+```
+
+# Get
+
+## Get
 
 plain bbolt
 
@@ -44,6 +78,9 @@ func get(key []byte) (Object, error) {
         }
 
         data := b.Get(key)
+        if data == nil {
+            return errors.New("object not found")
+        }
         return json.Unmarshal(data, &obj)
     })
 }
@@ -58,7 +95,7 @@ func get(key []byte) (Object, error) {
 }
 ```
 
-## get custom filtered slice
+## Get All
 
 plain bbolt
 
@@ -102,8 +139,108 @@ func getByProp(prop int) ([]Object, error) {
 })
 ```
 
-## update
+# Update
 
-## create
+plain bbolt
 
-## delete
+```go
+func setProp(key []byte, value int) error {
+    return db.Update(func(tx *bbolt.Tx) error {
+        b := tx.Bucket(myBucketName)
+        if b == nil {
+            return errors.New("bucket not found")
+        }
+
+        data := b.Get(key)
+        if data == nil {
+            return errors.New("object not found")
+        }
+
+        var obj Object
+        err := json.Unmarshal(data, &obj)
+        if err != nil {
+            return err
+        }
+
+        obj.prop = value
+
+        if !bytes.Equal(obj.Key(), key) {
+            err := b.Delete(key)
+            if err != nil {
+                return err
+            }
+        }
+
+        data, err := json.Marshal(obj)
+        if err != nil {
+            return err
+        }
+
+        return b.Put(obj.Key(), data)
+    })
+}
+```
+
+with bbucket
+
+```go
+func setProp(key []byte, value int) error {
+    return myBucket.Update(key, &Object{}, func(ptr interface{}) Keyer {
+        obj := *ptr.(*Object)
+        obj.prop = value
+        return obj
+    })
+}
+```
+
+# Delete
+
+plain bbolt
+
+```go
+func delete(key []byte) error {
+    return db.Update(func(tx *bbolt.Tx) error {
+        b := tx.Bucket(myBucketName)
+        if b == nil {
+            return errors.New("bucket not found")
+        }
+
+        data := b.Get(key)
+        if data == nil {
+            return errors.New("object not found")
+        }
+
+        return b.Delete(key)
+    })
+}
+```
+
+with bbucket
+
+```go
+func delete(key []byte) error {
+    return myBucket.Delete(key)
+}
+```
+
+# Coming Soon
+
+## Find(dst interface{}, f func(ptr interface{}) bool)
+
+- Loop through objects until you find the right one
+- No need to loop through all objects with GetAll()
+- interrupt by returning true
+
+## CreateAll([]Object) error
+
+- create multiple objects from slice
+- avoid multiple transactions for creating objects
+
+## UpdateAll(dst interface{}, mutate MutateFunc)
+
+- iterate over all objects in one transaction
+- update where necessary
+
+## DeleteAll(where WhereFunc)
+
+- delete all records matched by your function in one transaction
