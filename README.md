@@ -142,6 +142,51 @@ func getByProp(prop int) ([]Object, error) {
 })
 ```
 
+## Find
+
+plain bbolt
+
+```go
+func findByProp(prop int) (Object, error) {
+    var obj Object
+    return obj, db.View(func(tx *bbolt.Tx) error {
+        b := tx.Bucket(myBucketName)
+        if b == nil {
+            return errors.New("bucket not found")
+        }
+
+        c := b.Cursor()
+        for _, v := c.First(); true; _, v = c.Next() {
+            if v == nil {
+                return errors.New("object not found")
+            }
+
+            err := json.Unmarshal(v, &obj)
+            if err != nil {
+                return err
+            }
+
+            if obj.prop == prop {
+                return nil
+            }
+        }
+
+    })
+}
+```
+
+with bbucket
+
+```go
+func findByProp(prop int) (Object, error) {
+    var obj Object
+    return obj, myBucket.Find(&obj, func(_ []byte, ptr interface{}) (bool, err) {
+        obj = *ptr.(*Object)
+        return obj.prop == prop, nil
+    })
+}
+```
+
 # Update
 
 plain bbolt
@@ -227,12 +272,6 @@ func delete(key []byte) error {
 ```
 
 # Coming Soon
-
-## Find(dst interface{}, f func(ptr interface{}) bool)
-
-- Loop through objects until you find the right one
-- No need to loop through all objects with GetAll()
-- interrupt by returning true
 
 ## CreateAll([]Object) error
 

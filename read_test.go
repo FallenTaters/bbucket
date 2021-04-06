@@ -1,6 +1,7 @@
 package bbucket
 
 import (
+	"errors"
 	"testing"
 
 	"git.fuyu.moe/Fuyu/assert"
@@ -48,5 +49,47 @@ func TestGetAll(t *testing.T) {
 		assert.NoError(err)
 
 		assert.Cmp(expected, actual)
+	})
+}
+
+func TestFind(t *testing.T) {
+	br := getTestRepo()
+	defer br.DB.Close()
+
+	t.Run(`find returning found = true`, func(t *testing.T) {
+		assert := assert.New(t)
+
+		var obj testStruct
+		err := br.Find(&testStruct{}, func(key []byte, ptr interface{}) (found bool, err error) {
+			obj = *ptr.(*testStruct)
+			return obj == testStruct2, nil
+		})
+		assert.NoError(err)
+		assert.Eq(obj, testStruct2)
+	})
+
+	t.Run(`find returns ErrObjectNotFound`, func(t *testing.T) {
+		assert := assert.New(t)
+
+		var obj testStruct
+		err := br.Find(&testStruct{}, func(key []byte, ptr interface{}) (found bool, err error) {
+			obj = *ptr.(*testStruct)
+			return false, nil
+		})
+		assert.Eq(ErrObjectNotFound, err)
+		assert.Eq(obj, testStruct3)
+	})
+
+	t.Run(`error interrupts and is passed through`, func(t *testing.T) {
+		assert := assert.New(t)
+
+		var obj testStruct
+		myErr := errors.New("custom error")
+		err := br.Find(&testStruct{}, func(key []byte, ptr interface{}) (found bool, err error) {
+			obj = *ptr.(*testStruct)
+			return false, myErr
+		})
+		assert.Eq(myErr, err)
+		assert.Eq(obj, testStruct1)
 	})
 }
