@@ -58,7 +58,7 @@ with bbucket
 
 ```go
 func create(obj Object) error {
-    return myBucket.Create(obj)
+    return myBucket.Create(obj.Key(), obj)
 }
 ```
 
@@ -130,11 +130,14 @@ with bbucket
 ```go
 func getByProp(prop int) ([]Object, error) {
     var objects []Object
-    return objects, myBucket.GetAll(&Object{}, func(obj interface{}) {
+    return objects, myBucket.GetAll(&Object{}, func(obj interface{}) error {
         o := *obj.(*Object)
+
         if o.prop == prop {
             objects = append(objects, o)
         }
+
+        return nil
     })
 })
 ```
@@ -185,10 +188,10 @@ with bbucket
 
 ```go
 func setProp(key []byte, value int) error {
-    return myBucket.Update(key, &Object{}, func(ptr interface{}) Keyer {
+    return myBucket.Update(key, &Object{}, func(ptr interface{}) (interface{}, error) {
         obj := *ptr.(*Object)
         obj.prop = value
-        return obj
+        return obj, nil
     })
 }
 ```
