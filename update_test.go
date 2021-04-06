@@ -20,10 +20,10 @@ func TestUpdate(t *testing.T) {
 
 		expected.Data = 9876
 
-		err = br.Update(expected.Key(), &testStruct{}, func(objPtr interface{}) Keyer {
+		err = br.Update(expected.Key(), &testStruct{}, func(objPtr interface{}) (interface{}, error) {
 			obj := *objPtr.(*testStruct)
 			obj.Data = 9876
-			return obj
+			return obj, nil
 		})
 		assert.NoError(err)
 
@@ -42,38 +42,10 @@ func TestUpdate(t *testing.T) {
 		_, err := getTestStruct(br, expected.Key())
 		assert.Eq(ErrObjectNotFound, err)
 
-		err = br.Update(expected.Key(), &testStruct{}, func(objPtr interface{}) Keyer {
-			return nil
+		err = br.Update(expected.Key(), &testStruct{}, func(objPtr interface{}) (interface{}, error) {
+			return nil, nil
 		})
 
-		assert.Eq(ErrObjectNotFound, err)
-	})
-
-	t.Run(`key change`, func(t *testing.T) {
-		assert := assert.New(t)
-
-		original := testStruct2
-		actual, err := getTestStruct(br, original.Key())
-		assert.NoError(err)
-		assert.Eq(original, actual)
-
-		expected := original
-		expected.ID = "new_id"
-		_, err = getTestStruct(br, expected.Key())
-		assert.Eq(ErrObjectNotFound, err)
-
-		err = br.Update(original.Key(), &testStruct{}, func(objPtr interface{}) Keyer {
-			obj := *objPtr.(*testStruct)
-			obj.ID = "new_id"
-			return obj
-		})
-		assert.NoError(err)
-
-		actual, err = getTestStruct(br, expected.Key())
-		assert.NoError(err)
-		assert.Eq(expected, actual)
-
-		_, err = getTestStruct(br, original.Key())
 		assert.Eq(ErrObjectNotFound, err)
 	})
 }

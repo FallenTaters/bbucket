@@ -36,7 +36,7 @@ func TestCreate(t *testing.T) {
 		_, err := getTestStruct(br, expected.Key())
 		assert.Eq(ErrObjectNotFound, err)
 
-		err = br.Create(expected)
+		err = br.Create(expected.Key(), expected)
 		assert.NoError(err)
 
 		actual, err := getTestStruct(br, expected.Key())
@@ -56,7 +56,7 @@ func TestCreate(t *testing.T) {
 		_, err := getTestStruct(br, expected.Key())
 		assert.NoError(err)
 
-		err = br.Create(expected)
+		err = br.Create(expected.Key(), expected)
 		assert.Eq(ErrObjectAlreadyExists, err)
 
 		actual, err := getTestStruct(br, expected.Key())

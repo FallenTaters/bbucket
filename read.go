@@ -23,7 +23,7 @@ func (br Bucket) Get(key []byte, dst interface{}) error {
 // GetterFunc receives a pointer to an object.
 // Add the object to a slice defined in outside scope.
 // Get your object of type T using: `*ptr.(*T)`
-func (br Bucket) GetAll(dst interface{}, f GetterFunc) error {
+func (br Bucket) GetAll(dst interface{}, f func(ptr interface{}) error) error {
 	if f == nil {
 		return ErrNilFuncPassed
 	}
@@ -35,9 +35,7 @@ func (br Bucket) GetAll(dst interface{}, f GetterFunc) error {
 				return err
 			}
 
-			f(dst)
-
-			return nil
+			return f(dst)
 		})
 	})
 }

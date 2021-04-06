@@ -1,7 +1,6 @@
 package bbucket
 
 import (
-	"bytes"
 	"encoding/json"
 
 	"go.etcd.io/bbolt"
@@ -9,10 +8,10 @@ import (
 
 // Update saves changes to an object made in a function.
 // If the key does not exist, it return ErrObjectNotFound
-// MutateFunc receives a pointer to an object to be modified.
+// f receives a pointer to an object to be modified.
 // It should return the modified object, not a pointer.
 // Get your object of type T using: `*ptr.(*T)`
-func (br Bucket) Update(key []byte, dst interface{}, mutate MutateFunc) error {
+func (br Bucket) Update(key []byte, dst interface{}, f func(ptr interface{}) (object interface{}, err error)) error {
 	return br.BucketUpdate(func(b *bbolt.Bucket) error {
 		data := b.Get(key)
 		if data == nil {
@@ -24,21 +23,16 @@ func (br Bucket) Update(key []byte, dst interface{}, mutate MutateFunc) error {
 			return err
 		}
 
-		newObj := mutate(dst)
-		newKey := newObj.Key()
-
-		if !bytes.Equal(newKey, key) {
-			err = b.Delete(key)
-			if err != nil {
-				return err
-			}
-		}
-
-		data, err = json.Marshal(newObj)
+		obj, err := f(dst)
 		if err != nil {
 			return err
 		}
 
-		return b.Put(newKey, data)
+		data, err = json.Marshal(obj)
+		if err != nil {
+			return err
+		}
+
+		return b.Put(key, data)
 	})
 }

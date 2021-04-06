@@ -29,7 +29,7 @@ func New(db *bbolt.DB, bucket []byte) Bucket {
 
 // BucketView is used internally and allows for custom implementations.
 // It wraps DB.View() and Tx.Bucket()
-func (br Bucket) BucketView(f BucketFunc) error {
+func (br Bucket) BucketView(f func(*bbolt.Bucket) error) error {
 	return br.DB.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket(br.Bucket)
 		if b == nil {
@@ -42,7 +42,7 @@ func (br Bucket) BucketView(f BucketFunc) error {
 
 // BucketUpdate is used internally and allows for custom implementations.
 // It wraps DB.Update() and Tx.Bucket()
-func (br Bucket) BucketUpdate(f BucketFunc) error {
+func (br Bucket) BucketUpdate(f func(*bbolt.Bucket) error) error {
 	return br.DB.Update(func(tx *bbolt.Tx) error {
 		b := tx.Bucket(br.Bucket)
 		if b == nil {

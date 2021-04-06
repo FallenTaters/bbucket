@@ -22,9 +22,9 @@ func (br Bucket) NextSequence() int {
 
 // Create stores a new object in the bucket.
 // If the key already exists, it returns ErrObjectAlreadyExists
-func (br Bucket) Create(obj Keyer) error {
+func (br Bucket) Create(key []byte, obj interface{}) error {
 	return br.BucketUpdate(func(b *bbolt.Bucket) error {
-		data := b.Get(obj.Key())
+		data := b.Get(key)
 		if data != nil {
 			return ErrObjectAlreadyExists
 		}
@@ -34,6 +34,6 @@ func (br Bucket) Create(obj Keyer) error {
 			return err
 		}
 
-		return b.Put(obj.Key(), data)
+		return b.Put(key, data)
 	})
 }

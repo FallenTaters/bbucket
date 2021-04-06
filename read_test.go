@@ -41,8 +41,9 @@ func TestGetAll(t *testing.T) {
 
 		expected := testData
 		var actual []testStruct
-		err := br.GetAll(&testStruct{}, func(obj interface{}) {
+		err := br.GetAll(&testStruct{}, func(obj interface{}) error {
 			actual = append(actual, *obj.(*testStruct))
+			return nil
 		})
 		assert.NoError(err)
 
