@@ -11,7 +11,7 @@
 - Bulk update operations
 - Bulk delete operations
 - Bulk create operations
-- Cursor-based use cases
+- Cursor-based use cases such as find()
 
 # Get Started
 
