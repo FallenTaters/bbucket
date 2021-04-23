@@ -9,7 +9,7 @@ import (
 
 func TestGet(t *testing.T) {
 	br := getTestRepo()
-	defer br.DB.Close()
+	defer br.Close()
 
 	t.Run(`found`, func(t *testing.T) {
 		assert := assert.New(t)
@@ -35,7 +35,7 @@ func TestGet(t *testing.T) {
 
 func TestGetAll(t *testing.T) {
 	br := getTestRepo()
-	defer br.DB.Close()
+	defer br.Close()
 
 	t.Run(`get all`, func(t *testing.T) {
 		assert := assert.New(t)
@@ -50,11 +50,29 @@ func TestGetAll(t *testing.T) {
 
 		assert.Cmp(expected, actual)
 	})
+
+	t.Run(`nil function`, func(t *testing.T) {
+		assert := assert.New(t)
+
+		err := br.GetAll(&testStruct{}, nil)
+		assert.Eq(ErrNilFuncPassed, err)
+	})
+
+	t.Run(`invalid destination`, func(t *testing.T) {
+		assert := assert.New(t)
+
+		c := make(chan int)
+
+		err := br.GetAll(c, func(obj interface{}) error {
+			return nil
+		})
+		assert.Error(err)
+	})
 }
 
 func TestFind(t *testing.T) {
 	br := getTestRepo()
-	defer br.DB.Close()
+	defer br.Close()
 
 	t.Run(`find returning found = true`, func(t *testing.T) {
 		assert := assert.New(t)
@@ -91,5 +109,23 @@ func TestFind(t *testing.T) {
 		})
 		assert.Eq(myErr, err)
 		assert.Eq(obj, testStruct1)
+	})
+
+	t.Run(`nil function`, func(t *testing.T) {
+		assert := assert.New(t)
+
+		err := br.Find(&testStruct{}, nil)
+		assert.Eq(ErrNilFuncPassed, err)
+	})
+
+	t.Run(`invalid destination`, func(t *testing.T) {
+		assert := assert.New(t)
+
+		c := make(chan int)
+
+		err := br.Find(c, func(key []byte, ptr interface{}) (found bool, err error) {
+			return false, nil
+		})
+		assert.Error(err)
 	})
 }

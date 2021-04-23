@@ -1,6 +1,7 @@
 package bbucket
 
 import (
+	"errors"
 	"testing"
 
 	"git.fuyu.moe/Fuyu/assert"
@@ -8,7 +9,7 @@ import (
 
 func TestUpdate(t *testing.T) {
 	br := getTestRepo()
-	defer br.DB.Close()
+	defer br.Close()
 
 	t.Run(`successful update`, func(t *testing.T) {
 		assert := assert.New(t)
@@ -47,5 +48,50 @@ func TestUpdate(t *testing.T) {
 		})
 
 		assert.Eq(ErrObjectNotFound, err)
+	})
+
+	t.Run(`invalid destination`, func(t *testing.T) {
+		assert := assert.New(t)
+
+		err := br.Get(testStruct1.Key(), &testStruct{})
+		assert.NoError(err)
+
+		err = br.Update(testStruct1.Key(), make(chan int), func(obj interface{}) (interface{}, error) {
+			return nil, nil
+		})
+		assert.Error(err)
+	})
+
+	t.Run(`nil function`, func(t *testing.T) {
+		assert := assert.New(t)
+
+		err := br.Get(testStruct1.Key(), &testStruct{})
+		assert.NoError(err)
+
+		err = br.Update(testStruct1.Key(), &testStruct{}, nil)
+		assert.Eq(ErrNilFuncPassed, err)
+	})
+
+	t.Run(`pass error through`, func(t *testing.T) {
+		assert := assert.New(t)
+
+		myErr := errors.New(`custom error`)
+
+		err := br.Update(testStruct1.Key(), &testStruct{}, func(_ interface{}) (interface{}, error) {
+			return nil, myErr
+		})
+		assert.Eq(myErr, err)
+	})
+
+	t.Run(`marshal error`, func(t *testing.T) {
+		assert := assert.New(t)
+
+		err := br.Get(testStruct1.Key(), &testStruct{})
+		assert.NoError(err)
+
+		err = br.Update(testStruct1.Key(), &testStruct{}, func(_ interface{}) (interface{}, error) {
+			return make(chan int), nil
+		})
+		assert.Error(err)
 	})
 }

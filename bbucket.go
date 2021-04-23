@@ -27,6 +27,11 @@ func New(db *bbolt.DB, bucket []byte) Bucket {
 	}
 }
 
+// Close closes the underlying bbolt DB.
+func (br Bucket) Close() error {
+	return br.DB.Close()
+}
+
 // BucketView is used internally and allows for custom implementations.
 // It wraps DB.View() and Tx.Bucket()
 func (br Bucket) BucketView(f func(*bbolt.Bucket) error) error {

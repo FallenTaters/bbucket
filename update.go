@@ -13,6 +13,10 @@ import (
 // Get your object of type T using: `*ptr.(*T)`
 func (br Bucket) Update(key []byte, dst interface{}, f func(ptr interface{}) (object interface{}, err error)) error {
 	return br.BucketUpdate(func(b *bbolt.Bucket) error {
+		if f == nil {
+			return ErrNilFuncPassed
+		}
+
 		data := b.Get(key)
 		if data == nil {
 			return ErrObjectNotFound

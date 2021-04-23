@@ -2,8 +2,10 @@ package bbucket
 
 import (
 	"encoding/json"
+	"testing"
 	"time"
 
+	"git.fuyu.moe/Fuyu/assert"
 	"go.etcd.io/bbolt"
 )
 
@@ -33,6 +35,10 @@ var (
 	testStruct3 = testStruct{
 		"CDE",
 		345,
+	}
+	testStruct4 = testStruct{
+		"XYZ",
+		666,
 	}
 )
 
@@ -75,4 +81,23 @@ func getTestRepo() Bucket {
 	}
 
 	return br
+}
+
+func TestNew(t *testing.T) {
+	assert := assert.New(t)
+
+	db, err := bbolt.Open(`test.db`, 0666, &bbolt.Options{Timeout: 1 * time.Second})
+	assert.NoError(err)
+	defer db.Close()
+
+	bucketName := []byte("myBucket")
+
+	expected := Bucket{
+		DB:     db,
+		Bucket: bucketName,
+	}
+
+	actual := New(db, bucketName)
+	assert.Eq(expected.DB, actual.DB)
+	assert.Cmp(expected.Bucket, actual.Bucket)
 }

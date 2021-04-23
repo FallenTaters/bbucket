@@ -23,7 +23,14 @@ func getTestStruct(br Bucket, key []byte) (testStruct, error) {
 
 func TestCreate(t *testing.T) {
 	br := getTestRepo()
-	defer br.DB.Close()
+	defer br.Close()
+
+	t.Run(`marshal error`, func(t *testing.T) {
+		assert := assert.New(t)
+
+		err := br.Create(Itob(1), make(chan int))
+		assert.Error(err)
+	})
 
 	t.Run(`successful creation`, func(t *testing.T) {
 		assert := assert.New(t)
@@ -64,4 +71,16 @@ func TestCreate(t *testing.T) {
 
 		assert.Eq(expected, actual)
 	})
+}
+
+func TestNextSequence(t *testing.T) {
+	assert := assert.New(t)
+	br := getTestRepo()
+	defer br.Close()
+
+	i := br.NextSequence()
+	assert.Eq(1, i)
+
+	i = br.NextSequence()
+	assert.Eq(2, i)
 }
