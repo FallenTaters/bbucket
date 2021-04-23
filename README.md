@@ -30,6 +30,8 @@ myBucket := bbucket.New(db, myBucketName)
 
 # Create
 
+## Create
+
 plain bbolt
 
 ```go
@@ -59,6 +61,49 @@ with bbucket
 ```go
 func create(obj Object) error {
     return myBucket.Create(obj.Key(), obj)
+}
+```
+
+## CreateAll
+
+plain bbolt
+
+```go
+func createAll(objects []Object) error {
+    return db.Update(func(tx *bbolt.Tx) error {
+        b := tx.Bucket(myBucketName)
+        if b == nil {
+            return errors.New("bucket not found")
+        }
+
+        for _, obj := range objects {
+            if b.Get(obj.Key()) != nil {
+				return errors.New("object already exists")
+			}
+
+			data, err := json.Marshal(obj)
+			if err != nil {
+				return err
+			}
+
+			err = b.Put(obj.Key(), data)
+			if err != nil {
+				return err
+			}
+        }
+
+        return nil
+    })
+}
+```
+
+with bbucket
+
+```go
+func createAll(objects []Object) error {
+	return br.CreateAll(objects, func(obj interface{}) (key []byte, err error) {
+		return obj.(Object).Key(), nil
+	})
 }
 ```
 

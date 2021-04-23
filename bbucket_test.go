@@ -40,6 +40,14 @@ var (
 		"XYZ",
 		666,
 	}
+	testStruct5 = testStruct{
+		"WXY",
+		667,
+	}
+	testStruct6 = testStruct{
+		"VWX",
+		668,
+	}
 )
 
 var testData = []testStruct{
