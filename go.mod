@@ -1,4 +1,4 @@
-module github.com/PotatoesFall/bbucket
+module github.com/FallenTaters/bbucket
 
 go 1.15
 
