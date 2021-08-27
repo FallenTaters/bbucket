@@ -91,6 +91,19 @@ func getTestRepo() Bucket {
 	return br
 }
 
+func getAllTestStructs(br Bucket) []testStruct {
+	out := []testStruct{}
+	err := br.GetAll(&testStruct{}, func(ptr interface{}) error {
+		out = append(out, *ptr.(*testStruct))
+		return nil
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	return out
+}
+
 func TestNew(t *testing.T) {
 	assert := assert.New(t)
 
