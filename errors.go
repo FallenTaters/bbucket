@@ -12,4 +12,5 @@ var (
 	ErrKeyChanged          = errors.New("key change update not allowed")
 	ErrBucketNotFound      = bbolt.ErrBucketNotFound
 	ErrNilFuncPassed       = errors.New("nil function passed")
+	ErrNonSliceArgument    = errors.New("non-slice argument passed")
 )
