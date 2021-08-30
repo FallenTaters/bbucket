@@ -234,6 +234,8 @@ func findByProp(prop int) (Object, error) {
 
 # Update
 
+## Update
+
 plain bbolt
 
 ```go
@@ -283,6 +285,18 @@ func setProp(key []byte, value int) error {
         obj.prop = value
         return obj, nil
     })
+}
+```
+
+## UpdateAll
+
+```go
+func setAllProp(objects []Object, value int) error {
+	return br.UpdateAll(&Object{}, func(ptr interface{}) (key []byte, object interface{}, err error) {
+        o := *obj.(*Object)
+        o.prop = value
+		return o.Key(), o, nil
+	})
 }
 ```
 

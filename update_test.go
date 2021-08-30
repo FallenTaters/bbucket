@@ -2,9 +2,11 @@ package bbucket
 
 import (
 	"errors"
+	"strings"
 	"testing"
 
 	"git.fuyu.moe/Fuyu/assert"
+	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
 func TestUpdate(t *testing.T) {
@@ -94,4 +96,138 @@ func TestUpdate(t *testing.T) {
 		})
 		assert.Error(err)
 	})
+}
+
+func TestUpdateAll(t *testing.T) {
+	t.Run(`nil func passed`, func(t *testing.T) {
+		assert := assert.New(t)
+		br := getTestRepo()
+		defer br.Close()
+
+		err := br.UpdateAll(&testStruct{}, nil)
+
+		assert.Eq(ErrNilFuncPassed, err)
+	})
+
+	t.Run(`don't save if any error occurs`, func(t *testing.T) {
+		assert := assert.New(t)
+		br := getTestRepo()
+		defer br.Close()
+
+		// unmarshal error
+		err := br.UpdateAll(testStruct{}, func(ptr interface{}) (key []byte, object interface{}, err error) {
+			return nil, nil, nil
+		})
+		assert.Error(err)
+		assertUnchanged(assert, br)
+
+		// marshal error
+		err = br.UpdateAll(&testStruct{}, func(ptr interface{}) (key []byte, object interface{}, err error) {
+			return []byte(`bla`), func() {}, nil
+		})
+		assert.Error(err)
+		assertUnchanged(assert, br)
+
+		// custom error in function
+		err = br.UpdateAll(&testStruct{}, func(ptr interface{}) (key []byte, object interface{}, err error) {
+			return []byte(`bla`), testStruct{}, errors.New(`sdafkjaslkdfj`)
+		})
+		assert.Error(err)
+		assertUnchanged(assert, br)
+	})
+
+	t.Run(`delete update`, func(t *testing.T) {
+		assert := assert.New(t)
+		br := getTestRepo()
+		defer br.Close()
+
+		o := testStruct{}
+		err := br.Get([]byte(`ABC`), &o)
+		assert.NoError(err)
+
+		err = br.UpdateAll(&testStruct{}, func(ptr interface{}) (key []byte, object interface{}, err error) {
+			o := *ptr.(*testStruct)
+			if o.ID == `ABC` {
+				return nil, nil, nil
+			}
+			return o.Key(), o, nil
+		})
+		assert.NoError(err)
+
+		err = br.Get([]byte(`ABC`), &o)
+		assert.Eq(ErrObjectNotFound, err)
+	})
+
+	t.Run(`update key`, func(t *testing.T) {
+		assert := assert.New(t)
+		br := getTestRepo()
+		defer br.Close()
+
+		o := testStruct{}
+		err := br.Get([]byte(`bla`), &o)
+		assert.Eq(ErrObjectNotFound, err)
+
+		err = br.UpdateAll(&testStruct{}, func(ptr interface{}) (key []byte, object interface{}, err error) {
+			o := *ptr.(*testStruct)
+			if o.ID == `ABC` {
+				return []byte(`bla`), o, nil
+			}
+			return o.Key(), o, nil
+		})
+		assert.NoError(err)
+
+		err = br.Get([]byte(`bla`), &o)
+		assert.NoError(err)
+	})
+
+	t.Run(`update value`, func(t *testing.T) {
+		assert := assert.New(t)
+		br := getTestRepo()
+		defer br.Close()
+
+		err := br.UpdateAll(&testStruct{}, func(ptr interface{}) (key []byte, object interface{}, err error) {
+			o := *ptr.(*testStruct)
+			if o.ID == `ABC` {
+				o.Data = 99999
+			}
+			return o.Key(), o, nil
+		})
+		assert.NoError(err)
+
+		o := testStruct{}
+		err = br.Get([]byte(`ABC`), &o)
+		assert.NoError(err)
+		assert.Eq(99999, o.Data)
+	})
+
+	t.Run(`update key and value`, func(t *testing.T) {
+		assert := assert.New(t)
+		br := getTestRepo()
+		defer br.Close()
+
+		o := testStruct{}
+		err := br.Get([]byte(`bla`), &o)
+		assert.Eq(ErrObjectNotFound, err)
+
+		err = br.UpdateAll(&testStruct{}, func(ptr interface{}) (key []byte, object interface{}, err error) {
+			o := *ptr.(*testStruct)
+			if o.ID == `ABC` {
+				o.Data = 99999
+				return []byte(`bla`), o, nil
+			}
+			return o.Key(), o, nil
+		})
+		assert.NoError(err)
+
+		err = br.Get([]byte(`bla`), &o)
+		assert.Eq(99999, o.Data)
+		assert.NoError(err)
+	})
+}
+
+func assertUnchanged(assert assert.Assert, br Bucket) {
+	have := getAllTestStructs(br)
+	assert.Cmp(testData, have, cmpopts.SortSlices(func(a, b testStruct) bool {
+		return strings.Compare(a.ID, b.ID) < 0
+	}))
 }
