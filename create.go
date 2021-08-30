@@ -55,13 +55,9 @@ func (br Bucket) CreateAll(objs interface{}, keyFunc func(obj interface{}) (key 
 			return nil
 		}
 
-		objSlice := make([]interface{}, s.Len())
-
 		for i := 0; i < s.Len(); i++ {
-			objSlice[i] = s.Index(i).Interface()
-		}
+			obj := s.Index(i).Interface()
 
-		for _, obj := range objSlice {
 			key, err := keyFunc(obj)
 			if err != nil {
 				return err
