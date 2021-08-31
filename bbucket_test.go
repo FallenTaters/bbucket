@@ -10,8 +10,9 @@ import (
 )
 
 var (
-	testPath   = "test.db"
-	testBucket = []byte("test")
+	testPath          = "test.db"
+	testBucket        = []byte("test")
+	testMigrateBucket = []byte("testMigrate")
 )
 
 type testStruct struct {
